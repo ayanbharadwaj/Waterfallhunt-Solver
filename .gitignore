@@ -1,0 +1,4 @@
+frames/
+results/
+dem_*.tif
+__pycache__/
