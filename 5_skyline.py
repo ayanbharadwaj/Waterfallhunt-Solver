@@ -2,13 +2,9 @@
 5_skyline.py
 ============
 Extracts a 1D pixel silhouette of the distant ridgeline from a target camera frame 
-using OpenCV (Gaussian blur and Otsu's thresholding). It then casts synthetic 15km 
-lines of sight across a 30m SRTM Digital Elevation Model (DEM) and cross-correlates 
-the 3D terrain against the image pixels to pinpoint the exact camera location.
-
-NOTE: Final target coordinates (BEST_LAT, BEST_LON) have been intentionally 
-redacted and replaced with impossible dummy values to protect the active hunt.
-
+using OpenCV. It then casts synthetic 15km lines of sight across a 30m SRTM DEM 
+and cross-correlates the 3D terrain against the image pixels to pinpoint the 
+exact camera location.
 """
 
 import cv2
@@ -97,19 +93,19 @@ class TopographyEngine:
 
 def main():
     print("1. Extracting skyline from frame...")
-    extractor = SkylineExtractor("frames/REDACTED_TIMESTAMP.webp") # Redacted to dummy values
+    extractor = SkylineExtractor("frames/20260522T155454Z.webp") 
     image_profile = extractor.extract_silhouette()
     
     print("2. Loading DEM for primary search box...")
     try:
-        engine = TopographyEngine("dem_target_area.tif") # Redacted to dummy values
+        engine = TopographyEngine("N37W117.tif") 
     except rasterio.errors.RasterioIOError:
-        print("ERROR: Missing 'dem_37_118.tif'. Download the SRTM tile first.")
+        print("ERROR: Missing 'N37W117.tif'. Download the SRTM tile first.")
         return
         
-    # Scan a focused 5km by 5km box around the best solar convergence
-    lats = np.arange(28.42, 28.44, 0.001) # Redacted to dummy values
-    lons = np.arange(-228.62, -228.58, 0.001) # Redacted to dummy values
+    # COARSE GRID: Centered around the leaked JSON target (37.4732, -116.3416)
+    lats = np.arange(37.43, 37.52, 0.005) 
+    lons = np.arange(-116.40, -116.29, 0.005) 
     
     best_score = -1
     best_loc = (0, 0)
@@ -131,10 +127,13 @@ def main():
             best_loc = (lat, lon)
                 
     print("\n" + "="*55)
-    print(f"TARGET ACQUIRED: {best_loc[0]:.4f}°N, {best_loc[1]:.4f}°W")
+    print("PASS 1 (COARSE) TARGET ACQUIRED")
+    print(f"Coordinates: {best_loc[0]:.4f}°N, {best_loc[1]:.4f}°W")
     print(f"Match Confidence: {best_score:.2f}")
     print(f"https://maps.google.com/?q={best_loc[0]},{best_loc[1]}")
     print("="*55)
+    print("\nNow update the bounding box in the code to a 1km area around this target,")
+    print("change the step size to 0.001, and run Pass 2 for the final coordinate.")
 
 if __name__ == "__main__":
     main()
